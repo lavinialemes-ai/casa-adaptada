@@ -1,0 +1,233 @@
+<!DOCTYPE html> 
+<html lang="pt-BR"> 
+<head> 
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>Painel IoT - Casa Adaptada</title> 
+    <!-- Tailwind CSS para um design moderno --> 
+    <script src="https://cdn.tailwindcss.com"></script> 
+    <!-- Firebase SDKs (Compat v8) --> 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script> 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script> 
+</head> 
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between font-sans"> 
+ 
+    <!-- Cabeçalho --> 
+    <header class="bg-slate-900 border-b border-slate-800 p-4 shadow-md"> 
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2"> 
+            <h1 class="text-xl font-bold flex items-center gap-2"> 
+                <span class="inline-block w-3 h-3 rounded-full bg-emerald-500 animate-pulse" id="status-dot"></span> 
+                Painel IoT - Casa Adaptada 
+            </h1> 
+            <span class="text-xs text-slate-400 bg-slate-800 px-3 py-1 rounded-full border border-slate-700"> 
+                Firebase Realtime Database 
+            </span> 
+        </div> 
+    </header> 
+
+    <!-- Conteúdo Principal --> 
+    <main class="max-w-4xl mx-auto p-4 sm:p-6 w-full flex-grow flex flex-col justify-center"> 
+         
+        <div class="text-center mb-8"> 
+            <h2 class="text-2xl font-semibold mb-2">Controle de Dispositivos (ESP8266)</h2> 
+            <p class="text-slate-400 text-sm">Clique nos botões para alterar o estado em tempo real.</p> 
+        </div> 
+
+        <!-- Grade de LEDs e Atuadores --> 
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8"> 
+             
+            <!-- LED Principal (Chave /led) --> 
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center justify-between shadow-lg"> 
+                <div class="flex items-center gap-4"> 
+                    <div id="indicator-led" class="w-10 h-10 rounded-full bg-slate-700 border-2 border-slate-600 flex items-center justify-center transition-all duration-300 shadow-inner"> 
+                        <span class="w-4 h-4 rounded-full bg-slate-500 transition-all duration-300" id="bulb-led"></span> 
+                    </div> 
+                    <div> 
+                        <h3 class="font-bold text-lg">LED Principal</h3> 
+                        <p class="text-xs text-slate-400 font-mono">/led</p> 
+                        <p class="text-xs text-slate-400 mt-1" id="status-text-led">Desligado</p> 
+                    </div> 
+                </div> 
+                <button onclick="toggleDevice('led')" id="btn-led" class="px-5 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-md bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"> 
+                    Ligar 
+                </button> 
+            </div> 
+
+            <!-- LED 1 (Chave /led1) --> 
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center justify-between shadow-lg"> 
+                <div class="flex items-center gap-4"> 
+                    <div id="indicator-led1" class="w-10 h-10 rounded-full bg-slate-700 border-2 border-slate-600 flex items-center justify-center transition-all duration-300 shadow-inner"> 
+                        <span class="w-4 h-4 rounded-full bg-slate-500 transition-all duration-300" id="bulb-led1"></span> 
+                    </div> 
+                    <div> 
+                        <h3 class="font-bold text-lg">LED 1</h3> 
+                        <p class="text-xs text-slate-400 font-mono">/led1</p> 
+                        <p class="text-xs text-slate-400 mt-1" id="status-text-led1">Desligado</p> 
+                    </div> 
+                </div> 
+                <button onclick="toggleDevice('led1')" id="btn-led1" class="px-5 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-md bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"> 
+                    Ligar 
+                </button> 
+            </div> 
+
+            <!-- LED 2 (Chave /led2) --> 
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center justify-between shadow-lg"> 
+                <div class="flex items-center gap-4"> 
+                    <div id="indicator-led2" class="w-10 h-10 rounded-full bg-slate-700 border-2 border-slate-600 flex items-center justify-center transition-all duration-300 shadow-inner"> 
+                        <span class="w-4 h-4 rounded-full bg-slate-500 transition-all duration-300" id="bulb-led2"></span> 
+                    </div> 
+                    <div> 
+                        <h3 class="font-bold text-lg">LED 2</h3> 
+                        <p class="text-xs text-slate-400 font-mono">/led2</p> 
+                        <p class="text-xs text-slate-400 mt-1" id="status-text-led2">Desligado</p> 
+                    </div> 
+                </div> 
+                <button onclick="toggleDevice('led2')" id="btn-led2" class="px-5 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-md bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"> 
+                    Ligar 
+                </button> 
+            </div> 
+
+            <!-- LED 3 (Chave /led3) --> 
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center justify-between shadow-lg"> 
+                <div class="flex items-center gap-4"> 
+                    <div id="indicator-led3" class="w-10 h-10 rounded-full bg-slate-700 border-2 border-slate-600 flex items-center justify-center transition-all duration-300 shadow-inner"> 
+                        <span class="w-4 h-4 rounded-full bg-slate-500 transition-all duration-300" id="bulb-led3"></span> 
+                    </div> 
+                    <div> 
+                        <h3 class="font-bold text-lg">LED 3</h3> 
+                        <p class="text-xs text-slate-400 font-mono">/led3</p> 
+                        <p class="text-xs text-slate-400 mt-1" id="status-text-led3">Desligado</p> 
+                    </div> 
+                </div> 
+                <button onclick="toggleDevice('led3')" id="btn-led3" class="px-5 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-md bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"> 
+                    Ligar 
+                </button> 
+            </div> 
+
+            <!-- PORTA / Servo Motor (Chave /porta) --> 
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center justify-between shadow-lg sm:col-span-2"> 
+                <div class="flex items-center gap-4"> 
+                    <div id="indicator-porta" class="w-10 h-10 rounded-full bg-slate-700 border-2 border-slate-600 flex items-center justify-center transition-all duration-300 shadow-inner"> 
+                        <span class="w-4 h-4 rounded-full bg-slate-500 transition-all duration-300" id="bulb-porta"></span> 
+                    </div> 
+                    <div> 
+                        <h3 class="font-bold text-lg">Porta (Servo Motor)</h3> 
+                        <p class="text-xs text-slate-400 font-mono">/porta</p> 
+                        <p class="text-xs text-slate-400 mt-1" id="status-text-porta">Fechada (0°)</p> 
+                    </div> 
+                </div> 
+                <button onclick="toggleDevice('porta')" id="btn-porta" class="px-5 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-md bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"> 
+                    Abrir (90°) 
+                </button> 
+            </div> 
+
+        </div> 
+
+        <!-- Ações Globais --> 
+        <div class="flex flex-col sm:flex-row justify-center gap-3"> 
+            <button onclick="setAll(1)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-6 py-2.5 rounded-xl transition shadow-lg text-sm"> 
+                Ligar Todos os LEDs 
+            </button> 
+            <button onclick="setAll(0)" class="bg-rose-600 hover:bg-rose-500 text-white font-medium px-6 py-2.5 rounded-xl transition shadow-lg text-sm"> 
+                Desligar Todos os LEDs 
+            </button> 
+        </div> 
+
+    </main> 
+
+    <!-- Rodapé --> 
+    <footer class="text-center py-4 text-xs text-slate-500 border-t border-slate-900"> 
+        Conectado em tempo real com ESP8266 e Firebase 
+    </footer> 
+
+    <!-- Lógica de Sincronização do Firebase --> 
+    <script> 
+        const firebaseConfig = { 
+            databaseURL: "https://casa-adaptada-default-rtdb.europe-west1.firebasedatabase.app" 
+        }; 
+
+        if (!firebase.apps.length) { 
+            firebase.initializeApp(firebaseConfig); 
+        } else { 
+            firebase.app(); 
+        } 
+
+        const db = firebase.database(); 
+
+        const deviceKeys = ['led', 'led1', 'led2', 'led3', 'porta']; 
+        const deviceStates = { led: 0, led1: 0, led2: 0, led3: 0, porta: 0 }; 
+
+        // Monitorar alterações em tempo real para cada chave 
+        deviceKeys.forEach((key) => { 
+            db.ref(key).on('value', (snapshot) => { 
+                const val = snapshot.val() ? 1 : 0; 
+                deviceStates[key] = val; 
+                updateUI(key, val); 
+            }, (error) => { 
+                console.error("Erro ao ler chave " + key + ":", error); 
+            }); 
+        }); 
+
+        // Alternar estado individual ao clicar no botão 
+        function toggleDevice(key) { 
+            const currentState = deviceStates[key]; 
+            const newState = currentState === 1 ? 0 : 1; 
+             
+            db.ref(key).set(newState).catch((error) => { 
+                alert("Erro ao atualizar o banco: " + error.message); 
+            }); 
+        } 
+
+        // Ligar ou desligar todos os LEDs simultaneamente 
+        function setAll(state) { 
+            const updates = {}; 
+            updates['led'] = state; 
+            updates['led1'] = state; 
+            updates['led2'] = state; 
+            updates['led3'] = state; 
+
+            db.ref().update(updates).catch((error) => { 
+                alert("Erro ao atualizar o banco: " + error.message); 
+            }); 
+        } 
+
+        // Atualizar a interface visual dinâmica para cada elemento
+        function updateUI(key, state) { 
+            const indicator = document.getElementById(`indicator-${key}`); 
+            const bulb = document.getElementById(`bulb-${key}`); 
+            const statusText = document.getElementById(`status-text-${key}`); 
+            const btn = document.getElementById(`btn-${key}`); 
+
+            if (!indicator || !bulb || !statusText || !btn) return;
+
+            if (state === 1) { 
+                indicator.className = "w-10 h-10 rounded-full bg-emerald-950 border-2 border-emerald-500 flex items-center justify-center transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.5)]"; 
+                bulb.className = "w-4 h-4 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] transition-all duration-300 animate-pulse"; 
+                
+                if (key === 'porta') {
+                    statusText.innerText = "Aberta (90°)";
+                    btn.innerText = "Fechar (0°)";
+                } else {
+                    statusText.innerText = "Ligado";
+                    btn.innerText = "Desligar";
+                }
+                statusText.className = "text-xs text-emerald-400 font-medium mt-1"; 
+                btn.className = "px-5 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-md bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950"; 
+            } else { 
+                indicator.className = "w-10 h-10 rounded-full bg-slate-900 border-2 border-slate-800 flex items-center justify-center transition-all duration-300 shadow-inner"; 
+                bulb.className = "w-4 h-4 rounded-full bg-slate-700 transition-all duration-300"; 
+                
+                if (key === 'porta') {
+                    statusText.innerText = "Fechada (0°)";
+                    btn.innerText = "Abrir (90°)";
+                } else {
+                    statusText.innerText = "Desligado";
+                    btn.innerText = "Ligar";
+                }
+                statusText.className = "text-xs text-slate-400 mt-1"; 
+                btn.className = "px-5 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-md bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"; 
+            } 
+        } 
+    </script> 
+</body> 
+</html>
